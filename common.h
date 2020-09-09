@@ -1,7 +1,7 @@
 /*
  * @Author: LJB
  * @Date: 2020-08-24 19:25:45
- * @LastEditTime: 2020-09-09 00:41:54
+ * @LastEditTime: 2020-09-09 20:41:53
  * @LastEditors: LJB
  * @Description: 一些通用的定义，函数等
  * @FilePath: \lcd1602driver\common.h

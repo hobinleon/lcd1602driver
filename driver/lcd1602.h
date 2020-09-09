@@ -1,7 +1,7 @@
 /*
  * @Author: LJB
  * @Date: 2020-09-08 20:06:09
- * @LastEditTime: 2020-09-09 09:14:02
+ * @LastEditTime: 2020-09-09 21:26:38
  * @LastEditors: LJB
  * @Description: LCD1602的驱动引脚定义
  * @FilePath: \lcd1602driver\driver\lcd1602.h
@@ -22,6 +22,9 @@
 
 #define E_PORT GPIOB    //写操作时，信号下降沿有效；读操作时，高电平有效
 #define E_PIN GPIO_PIN_5
+
+#define lcd_clear()  lcd_write(COMMAND_REGISTER, 0X01)  //清除屏幕
+#define lcd_return_home() lcd_write(COMMAND_REGISTER, 0X20) //AC指针归位,光标归位
 
 typedef enum
 {
@@ -49,3 +52,33 @@ void lcd_init(lcd_info_type lcd_info);
  * @return {无} 
  */
 void lcd_write(lcd_register_type areg, uint8_t adata) ;
+
+/**
+ * @description: 读lcd忙的标志.
+ * @param {type} 
+ * @return {type} 返回值为真的时候,表示忙.应该等待.反之可以进行操作
+ */
+bool busy_flag(void) ;
+
+/**
+ * @description: 等待直到忙标志被清除
+ * @param {type} 
+ * @return {type} 
+ */
+void wait_for_busy(void);
+
+/**
+ * @description: 显示一个字符
+ * @param a 要显示的字符 
+ * @return  
+ */
+void lcd_putc(char a) ;
+
+
+/**
+ * @description: 显示一个字符串
+ * @param s 字符串,必须以/0结尾
+ * @return
+ */
+void lcd_puts(char *s) ;
+
