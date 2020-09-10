@@ -1,7 +1,7 @@
 /*
  * @Author: LJB
  * @Date: 2020-09-08 20:06:33
- * @LastEditTime: 2020-09-09 22:00:27
+ * @LastEditTime: 2020-09-10 20:21:50
  * @LastEditors: LJB
  * @Description: lcd1602的驱动源代码
  * @FilePath: \lcd1602driver\driver\lcd1602.c
@@ -32,15 +32,18 @@ void lcd_init(lcd_info_type lcd_info)
     RS_PORT->DDR |= RS_PIN ;
     RW_PORT->DDR |= RW_PIN ;
     E_PORT->DDR  |= E_PIN ;
-
+    
+    Delay(4998);    //2Mhz系统时钟下,延迟15ms所需要的周期数
     lcd_write(COMMAND_REGISTER, 0X28 );
-    Delay(DELAY_COUNT); 
+    Delay(1664);     //延迟5ms 
     lcd_write(COMMAND_REGISTER, 0X28 );
-    Delay(DELAY_COUNT);
+    wait_for_busy(); 
     lcd_write(COMMAND_REGISTER, 0X28 );
     Delay(DELAY_COUNT);
     lcd_clear();
     wait_for_busy(); // Delay(DELAY_COUNT);
+    lcd_write(COMMAND_REGISTER, 0X06);  //光标设置
+    wait_for_busy();
     lcd_write(COMMAND_REGISTER, 0x0c );
 }
 
