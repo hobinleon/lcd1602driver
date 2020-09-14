@@ -10,3 +10,5 @@
 #define digit_low(port, pin) port->ODR &= (~pin)
 
 void Delay(uint16_t nCount);
+
+void delay2(uint16_t nCount);
