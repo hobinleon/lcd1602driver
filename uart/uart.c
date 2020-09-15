@@ -1,7 +1,7 @@
 /*
  * @Author: LJB
  * @Date: 2020-09-11 10:48:02
- * @LastEditTime: 2020-09-15 10:02:49
+ * @LastEditTime: 2020-09-15 22:33:18
  * @LastEditors: LJB
  * @Description: 串口的函数库
  * @FilePath: \lcd1602driver\uart\uart.c
@@ -20,7 +20,7 @@ static data_buffer_type received_buf,trans_buf ;
  * @param buf 缓冲区地址 current_pos 当前处理的数据的位置 
  * @return {type} 
  */
-void align_buffer(data_buffer_type buffer);
+void align_buffer(data_buffer_type *buffer);
 
 /**
  * @description: 初始化串口
@@ -52,20 +52,21 @@ void init_uart(uint16_t band, UART1_Mode_TypeDef mode)
  * @param buf 缓冲区地址 current_pos 当前处理的数据的位置 
  * @return {type} 
  */
-void align_buffer(data_buffer_type buffer)
+void align_buffer(data_buffer_type *buffer)
 {
-    char i, *pos ;
-    i = (uint8_t)((char *)buffer.current_pos - buffer.buffer);
-    i -= buffer.size;// -(uint8_t)(buffer.current_pos - buffer.buffer);
-    pos = buffer.buffer ;
+    char *pos ;
+    uint8_t i ;
+    pos = (*buffer).buffer;
+    i = (*buffer).current_pos - pos;    //计算已经处理了多少个数据
+    i = (*buffer).size - i;// 计算还有多少个没有被处理
     while(i)
     {
-        *pos = *buffer.current_pos ;
+        *pos = *(*buffer).current_pos ;
         pos++ ;
-        buffer.current_pos++ ;
+        (*buffer).current_pos++ ;
         i--;
     }
-    buffer.current_pos = buffer.buffer ;
+    (*buffer).current_pos = (*buffer).buffer ;
 }
 
 /**
@@ -87,7 +88,7 @@ uint8_t uart_read(char *buf, uint8_t n)
 uint8_t uart_write(char *buf, uint8_t n)
 {
     char writed_count = 0;
-    align_buffer(trans_buf);
+    align_buffer(&trans_buf);
     while (n)
     {
         /* 判断缓冲区是否满 */

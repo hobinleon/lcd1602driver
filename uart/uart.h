@@ -1,7 +1,7 @@
 /*
  * @Author: LJB
  * @Date: 2020-09-11 10:48:27
- * @LastEditTime: 2020-09-14 22:32:53
+ * @LastEditTime: 2020-09-15 22:31:47
  * @LastEditors: LJB
  * @Description: 这里存储了一些默认设定,如果要改设定,就应该改这里的define相关内容
  * @注意事项:用到了中断,所以应该在主函数里面打开中断
@@ -22,7 +22,7 @@ typedef struct
     /* 缓冲区数据结构 */
     uint8_t size ;  //未发送或者接收到的数据的数量
     char buffer[UART_BUFFER_SIZE];
-    char *cur(uint8_t)(buffer.current_pos - buffer.buffer);rent_pos ; //当前操作的位置
+    char *current_pos ; //当前操作的位置
 }data_buffer_type;
 
 
