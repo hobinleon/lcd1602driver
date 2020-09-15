@@ -15,14 +15,14 @@
 #define UART_PARITY UART1_PARITY_NO
 #define UART_SYCNMODE UART1_SYNCMODE_CLOCK_DISABLE
 #define UART_WAKEUP_MODE UART1_WAKEUP_IDLELINE 
-#define UART_BUFFER_SIZE 128
+#define UART_BUFFER_SIZE 127
 
 typedef struct 
 {
     /* 缓冲区数据结构 */
     uint8_t size ;  //未发送或者接收到的数据的数量
     char buffer[UART_BUFFER_SIZE];
-    char *current_pos ; //当前操作的位置
+    char *cur(uint8_t)(buffer.current_pos - buffer.buffer);rent_pos ; //当前操作的位置
 }data_buffer_type;
 
 

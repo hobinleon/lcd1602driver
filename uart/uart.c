@@ -1,7 +1,7 @@
 /*
  * @Author: LJB
  * @Date: 2020-09-11 10:48:02
- * @LastEditTime: 2020-09-14 22:34:33
+ * @LastEditTime: 2020-09-15 10:02:49
  * @LastEditors: LJB
  * @Description: ´®¿ÚµÄº¯Êý¿â
  * @FilePath: \lcd1602driver\uart\uart.c
@@ -55,7 +55,8 @@ void init_uart(uint16_t band, UART1_Mode_TypeDef mode)
 void align_buffer(data_buffer_type buffer)
 {
     char i, *pos ;
-    i = buffer.size ;
+    i = (uint8_t)((char *)buffer.current_pos - buffer.buffer);
+    i -= buffer.size;// -(uint8_t)(buffer.current_pos - buffer.buffer);
     pos = buffer.buffer ;
     while(i)
     {
