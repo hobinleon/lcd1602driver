@@ -1,7 +1,7 @@
 /*
  * @Author: LJB
  * @Date: 2020-09-11 10:48:02
- * @LastEditTime: 2020-09-15 22:33:18
+ * @LastEditTime: 2020-09-16 10:20:26
  * @LastEditors: LJB
  * @Description: 串口的函数库
  * @FilePath: \lcd1602driver\uart\uart.c
@@ -140,7 +140,13 @@ void uart_send_handle()
  */
 void uart_receive_handle()
 {
-    
+  if (received_buf.current_pos < UART_BUFFER_SIZE)
+  {
+      /* 写入缓冲区 */
+      *received_buf.current_pos = (uint8_t)UART1->DR ;
+      received_buf.current_pos++ ;
+      received_buf.size++;
+  }
 }
 
 /**
@@ -150,5 +156,5 @@ void uart_receive_handle()
  */
 uint8_t get_received_datas_count()
 {
-    return 0;
+    return received_buf.size - (received_buf.current_pos - received_buf.buffer);
 }
