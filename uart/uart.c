@@ -1,7 +1,7 @@
 /*
  * @Author: LJB
  * @Date: 2020-09-11 10:48:02
- * @LastEditTime: 2020-09-16 10:20:26
+ * @LastEditTime: 2020-09-17 09:42:21
  * @LastEditors: LJB
  * @Description: 串口的函数库
  * @FilePath: \lcd1602driver\uart\uart.c
@@ -12,8 +12,12 @@
 #include "stm8s_clk.h"
 #include "stm8s_uart1.h"
 
-static data_buffer_type received_buf,trans_buf ;
+#define ENABLE_TX_INTERRUPT() UART1_ITConfig(UART1_IT_TXE, TRUE)
+#define DISABLE_TX_INTERRUPT() UART1_ITConfig(UART1_IT_TXE, FALSE)
+#define ENABLE_RX_INTERRUPT() UART1_ITConfig(UART1_IT_RXNE, TRUE) 
+#define DISABLE_RX_INTERRUPT() UART1_ITConfig(UART1_IT_RXNE, FALSE) 
 
+static data_buffer_type received_buf, trans_buf;
 
 /**
  * @description: 整理缓冲区
@@ -35,18 +39,20 @@ void align_buffer(data_buffer_type *buffer);
  */
 void init_uart(uint16_t band, UART1_Mode_TypeDef mode)
 {
-    CLK_PeripheralClockConfig(CLK_PERIPHERAL_UART1 , ENABLE) ; 
-    UART1_Init(9600, UART1_WORDLENGTH_8D, UART1_STOPBITS_1, UART1_PARITY_NO, \
-        UART1_SYNCMODE_CLOCK_DISABLE, UART1_MODE_TXRX_ENABLE);
-    UART1_Cmd(ENABLE) ;
+    CLK_PeripheralClockConfig(CLK_PERIPHERAL_UART1, ENABLE);
+    UART1_Init(9600, UART1_WORDLENGTH_8D, UART1_STOPBITS_1, UART1_PARITY_NO,
+               UART1_SYNCMODE_CLOCK_DISABLE, UART1_MODE_TXRX_ENABLE);
+    UART1_Cmd(ENABLE);
 
     //初始化缓冲区
-    received_buf.size = 0 ;
+    received_buf.size = 0;
     received_buf.current_pos = received_buf.buffer;
     trans_buf.size = 0;
     trans_buf.current_pos = trans_buf.buffer;
-}
 
+    //打开串口的发送寄存器空中断和接收数据就绪可读中断
+    ENABLE_RX_INTERRUPT();
+    ENABLE_TX_INTERRUPT();
 /**
  * @description: 整理缓冲区
  * @param buf 缓冲区地址 current_pos 当前处理的数据的位置 
@@ -54,19 +60,20 @@ void init_uart(uint16_t band, UART1_Mode_TypeDef mode)
  */
 void align_buffer(data_buffer_type *buffer)
 {
-    char *pos ;
-    uint8_t i ;
+    char *pos;
+    uint8_t i;
     pos = (*buffer).buffer;
-    i = (*buffer).current_pos - pos;    //计算已经处理了多少个数据
-    i = (*buffer).size - i;// 计算还有多少个没有被处理
-    while(i)
+    i = (*buffer).current_pos - pos; //计算已经处理了多少个数据
+    i = (*buffer).size - i;          // 计算还有多少个没有被处理
+    
+    while (i)
     {
-        *pos = *(*buffer).current_pos ;
-        pos++ ;
-        (*buffer).current_pos++ ;
+        *pos = *(*buffer).current_pos;
+        pos++;
+        (*buffer).current_pos++;
         i--;
     }
-    (*buffer).current_pos = (*buffer).buffer ;
+    (*buffer).current_pos = (*buffer).buffer;
 }
 
 /**
@@ -76,7 +83,7 @@ void align_buffer(data_buffer_type *buffer)
  */
 uint8_t uart_read(char *buf, uint8_t n)
 {
-  return 0;
+    return 0;
 }
 
 /**
@@ -88,24 +95,26 @@ uint8_t uart_read(char *buf, uint8_t n)
 uint8_t uart_write(char *buf, uint8_t n)
 {
     char writed_count = 0;
+    DISABLE_TX_INTERRUPT() ;    //涉及到缓冲区操作,必须关中断以免引起冲突
     align_buffer(&trans_buf);
     while (n)
     {
         /* 判断缓冲区是否满 */
         //因为数组下标是从0开始的,所以必须减1
-        if ((trans_buf.current_pos - trans_buf.buffer + trans_buf.size) <= UART_BUFFER_SIZE-1)
+        if ((trans_buf.current_pos - trans_buf.buffer + trans_buf.size) <= UART_BUFFER_SIZE - 1)
         {
             /* 写入缓冲区 */
-            trans_buf.buffer[trans_buf.size] = *buf ;
-            trans_buf.size ++ ;
-            buf++ ;
-            writed_count++ ;
+            trans_buf.buffer[trans_buf.size] = *buf;
+            trans_buf.size++;
+            buf++;
+            writed_count++;
             n--;
         }
         else
-          break ;
+            break;
     }
-    return writed_count ;
+    ENABLE_TX_INTERRUPT() ;
+    return writed_count;
 }
 
 /**
@@ -115,7 +124,7 @@ uint8_t uart_write(char *buf, uint8_t n)
  */
 bool uart_busy()
 {
-  return FALSE ;
+    return FALSE;
 }
 
 /**
@@ -125,12 +134,12 @@ bool uart_busy()
  */
 void uart_send_handle()
 {
-   if(trans_buf.size)
-   { 
-       UART1->DR = *trans_buf.current_pos;
-       trans_buf.current_pos++;
-       trans_buf.size--; 
-   }
+    if (trans_buf.size)
+    {
+        UART1->DR = *trans_buf.current_pos;
+        trans_buf.current_pos++;
+        trans_buf.size--;
+    }
 }
 
 /**
@@ -140,13 +149,19 @@ void uart_send_handle()
  */
 void uart_receive_handle()
 {
-  if (received_buf.current_pos < UART_BUFFER_SIZE)
-  {
-      /* 写入缓冲区 */
-      *received_buf.current_pos = (uint8_t)UART1->DR ;
-      received_buf.current_pos++ ;
-      received_buf.size++;
-  }
+    uint8_t i;
+    if (received_buf.size == UART_BUFFER_SIZE)  //如果缓冲区满了,就丢弃第一个数据
+    {
+        for (i = 0; i < UART_BUFFER_SIZE - 1; i++)
+        {
+            /* 往前移动,丢弃第一个数据 */
+            received_buf[i] = received_buf[i + 1];
+        }
+        received_buf.size--;
+    }
+    /* 写入缓冲区 */
+    received_buf[received_buf.size] = (uint8_t)UART1->DR;
+    received_buf.size++;
 }
 
 /**
